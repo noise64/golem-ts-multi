@@ -1,0 +1,12 @@
+package golem:component-one;
+
+// See https://component-model.bytecodealliance.org/design/wit.html for more details about the WIT syntax
+
+interface component-one-api {
+  add: func(value: u64);
+  get: func() -> u64;
+}
+
+world component-one {
+  export component-one-api;
+}
