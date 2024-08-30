@@ -6,7 +6,7 @@ import {InputOptions, OutputOptions, rollup} from "rollup";
 import rollupPluginNodeResolve from "@rollup/plugin-node-resolve";
 import rollupPluginTypeScript, {RollupTypescriptOptions} from "@rollup/plugin-typescript";
 
-import {allDepsSorted, Commands, Dependencies, main, run, runTask} from "./src/build-tools/build-tools";
+import {allDepsSorted, Commands, Dependencies, main, run, runCapture, runTask} from "./src/build-tools/build-tools";
 
 const commands: Commands = {
     "build": [build, "build all components"],
@@ -130,17 +130,60 @@ async function stubCompose(compName: string) {
     const componentBuildDir = path.join(outDir, "build", compName);
     const componentWasm = path.join(componentBuildDir, "component.wasm");
     const componentsBuildDir = path.join(outDir, "components");
-    const composedWasm = path.join(outDir, "components", compName + ".wasm");
+    const targetWasm = path.join(outDir, "components", compName + ".wasm");
+
+    let stubWasms: string[] = [];
+    const deps = componentDependencies[compName];
+    if (deps != undefined) {
+        for (const compName of deps) {
+            stubWasms.push(path.join(outDir, "stub", compName, "stub.wasm"));
+        }
+    }
 
     return runTask({
-        runMessage: `Composing stubs into component: ${compName}`, // TODO: add stubs
+        runMessage: `Composing stubs [${stubWasms.join(", ")}] into component: ${compName}`,
         skipMessage: "stub compose",
-        targets: [composedWasm],
-        sources: [componentWasm],
+        targets: [targetWasm],
+        sources: [componentWasm, ...stubWasms],
         run: async () => {
-            // TODO: do actual stubbing
+            let composeWasm = componentWasm;
+            if (stubWasms.length > 0) {
+                let srcWasm = componentWasm;
+                let i = 0;
+                for (const stubWasm of stubWasms) {
+                    i++;
+                    const prevComposeWasm = composeWasm;
+                    composeWasm = path.join(componentBuildDir, `compose-${i}-${path.basename(path.dirname(stubWasm))}.wasm`);
+                    const result = await runCapture(
+                        "golem-cli",
+                        [
+                            "stubgen", "compose",
+                            "--source-wasm", srcWasm,
+                            "--stub-wasm", stubWasm,
+                            "--dest-wasm", composeWasm,
+                        ]);
+                    if (result.code !== 0) {
+                        if (result.stderr.includes("Error: no dependencies of component") && result.stderr.includes("were found")) {
+                            console.log(`Skipping composing ${stubWasm}, not used`);
+                            composeWasm = prevComposeWasm;
+                            continue;
+                        }
+
+                        if (result.stdout) {
+                            process.stderr.write(result.stdout);
+                        }
+                        if (result.stderr) {
+                            process.stderr.write(result.stderr);
+                        }
+
+                        throw new Error(`Command [${result.cmd}] failed with code: ${result.code}`);
+                    }
+                    srcWasm = composeWasm;
+                }
+            }
+
             fs.mkdirSync(componentsBuildDir, {recursive: true});
-            fs.copyFileSync(componentWasm, composedWasm);
+            fs.copyFileSync(composeWasm, targetWasm);
         }
     });
 }
@@ -193,7 +236,7 @@ async function addStubDependency(compName: string, depCompName: string) {
     const dstWitDepStubDir = path.join(dstComponentDir, dstWitDir, "deps", `${pckNs}_${compName}-stub`);
 
     return runTask({
-        runMessage: `Adding stub dependency for: ${depCompName} to ${compName}`,
+        runMessage: `Adding stub dependency for ${depCompName} to ${compName}`,
         skipMessage: "add stub dependency",
         targets: [dstWitDepDir, dstWitDepStubDir],
         sources: [srcWitDir],

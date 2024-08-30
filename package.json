@@ -3,16 +3,16 @@
   "scripts": {
     "build": "npx tsx build.ts build",
     "updateRpcStubs": "npx tsx build.ts updateRpcStubs",
-    "help": "npx tsx build.ts",
-    "clean": "npx tsx build.ts clean"
+    "clean": "npx tsx build.ts clean",
+    "help": "npx tsx build.ts"
   },
   "devDependencies": {
     "@golemcloud/componentize-js": "0.10.5-golem.3",
     "@golemcloud/jco": "1.4.4-golem.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.14.2",
     "rollup": "^4.21.2",
-    "@rollup/plugin-typescript": "^11.1.6",
     "tslib": "^2.7.0",
     "tsx": "^4.19.0"
   }

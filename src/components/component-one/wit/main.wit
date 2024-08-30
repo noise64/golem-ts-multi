@@ -8,5 +8,6 @@ interface component-one-api {
 }
 
 world component-one {
+  import golem:component-two-stub/stub-component-two;
   export component-one-api;
 }
