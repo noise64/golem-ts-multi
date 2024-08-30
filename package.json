@@ -3,6 +3,7 @@
   "scripts": {
     "build": "npx tsx build.ts build",
     "updateRpcStubs": "npx tsx build.ts updateRpcStubs",
+    "generateNewComponent": "npx tsx build.ts generateNewComponent",
     "clean": "npx tsx build.ts clean",
     "help": "npx tsx build.ts"
   },

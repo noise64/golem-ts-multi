@@ -6,12 +6,22 @@ import {InputOptions, OutputOptions, rollup} from "rollup";
 import rollupPluginNodeResolve from "@rollup/plugin-node-resolve";
 import rollupPluginTypeScript, {RollupTypescriptOptions} from "@rollup/plugin-typescript";
 
-import {allDepsSorted, Commands, Dependencies, main, run, runCapture, runTask} from "./src/build-tools/build-tools";
+import {
+    allDepsSorted,
+    cmd, cmdArg,
+    Commands,
+    Dependencies,
+    main,
+    run,
+    runCapture,
+    runTask
+} from "./src/build-tools/build-tools";
 
 const commands: Commands = {
-    "build": [build, "build all components"],
-    "updateRpcStubs": [updateRpcStubs, "update stubs based on componentDependencies"],
-    "clean": [clean, "clean outputs and generated code"],
+    "build": cmd(build, "build all components"),
+    "updateRpcStubs": cmd(updateRpcStubs, "update stubs based on componentDependencies"),
+    "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template"),
+    "clean": cmd(clean, "clean outputs and generated code"),
 }
 
 const pckNs = "golem";
@@ -134,7 +144,7 @@ async function stubCompose(compName: string) {
 
     let stubWasms: string[] = [];
     const deps = componentDependencies[compName];
-    if (deps != undefined) {
+    if (deps !== undefined) {
         for (const compName of deps) {
             stubWasms.push(path.join(outDir, "stub", compName, "stub.wasm"));
         }
@@ -252,6 +262,25 @@ async function addStubDependency(compName: string, depCompName: string) {
             );
         }
     });
+}
+
+async function generateNewComponents(args: string[]) {
+    if (args.length != 1) {
+        throw new Error(`generateNewComponents expected exactly one argument (component-name), got: [${args.join(", ")}]`);
+    }
+
+    const componentName = args[0];
+    if (componentName === undefined) {
+        throw new Error("Undefined component name");
+    }
+
+    const componentDir = path.join(componentsDir, componentName)
+
+    if (fs.existsSync(componentDir)) {
+        throw new Error(`${componentDir} already exists!`);
+    }
+
+    fs.mkdirSync(componentDir, {recursive: true});
 }
 
 async function clean() {

@@ -2,7 +2,34 @@ import fs from "node:fs";
 import path from "node:path";
 import child_process from "node:child_process";
 
-export type Commands = { [key: string]: [() => Promise<void>, string] };
+export class Command {
+    constructor(
+        description: string,
+        run: (() => Promise<void>) | undefined,
+        runArgs: ((args: string[]) => Promise<void>) | undefined,
+    ) {
+        this.description = description;
+        this.run = run;
+        this.runArgs = runArgs;
+    }
+
+    static cmd(run: () => Promise<void>, description: string): Command {
+        return new Command(description, run, undefined);
+    }
+
+    static cmdArgs(runArgs: (args: string[]) => Promise<void>, description: string): Command {
+        return new Command(description, undefined, runArgs);
+    }
+
+    readonly description: string;
+    readonly run?: () => Promise<void>;
+    readonly runArgs?: (args: string[]) => Promise<void>;
+}
+
+export const cmd = Command.cmd;
+export const cmdArg = Command.cmdArgs;
+
+export type Commands = { [key: string]: Command };
 
 export async function main(commands: Commands) {
     const args = process.argv.splice(2);
@@ -10,18 +37,25 @@ export async function main(commands: Commands) {
     if (args.length == 0) {
         const maxCmdLen = Math.max(...Object.keys(commands).map((cmd) => cmd.length)) + 1;
         console.log("Available commands:");
-        for (const [cmd, [_, desc]] of Object.entries(commands)) {
-            console.log(`  ${(cmd + ":").padEnd(maxCmdLen)} ${desc}`)
+        for (const [name, cmd] of Object.entries(commands)) {
+            console.log(`  ${(name + ":").padEnd(maxCmdLen)} ${cmd.description}`)
         }
         return;
     }
 
     for (const cmd of args) {
         const command = commands[cmd];
-        if (command == undefined) {
+        if (command === undefined) {
             throw new Error(`Command not found: ${cmd}`);
         }
-        await command[0]();
+        if (command.run !== undefined) {
+            await command.run();
+        } else if (command.runArgs != undefined) {
+            await command.runArgs(args.splice(1));
+            return;
+        } else {
+            throw new Error(`Illegal state: both command.run and command.runArgs is undefined, description: ${command.description}`)
+        }
     }
 }
 
