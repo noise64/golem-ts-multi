@@ -4,7 +4,7 @@ import fs from "node:fs";
 import {InputOptions, OutputOptions, rollup} from "rollup";
 
 import rollupPluginNodeResolve from "@rollup/plugin-node-resolve";
-import rollupPluginTypeScript, {RPT2Options} from "rollup-plugin-typescript2";
+import rollupPluginTypeScript, {RollupTypescriptOptions} from "@rollup/plugin-typescript";
 
 import {allDepsSorted, Commands, Dependencies, main, run, runTask} from "./src/build-tools/build-tools";
 
@@ -31,10 +31,6 @@ const compNames: string[] = fs
 
 
 async function build() {
-    for (const compName of compNames) {
-        await generateBinding(compName);
-    }
-
     for (const compName of compNames) {
         await buildComponent(compName);
     }
@@ -84,12 +80,11 @@ async function rollupComponent(compName: string) {
             "tsconfig.json",
         ],
         run: async () => {
-            const tsOptions: RPT2Options = {
+            const tsOptions: RollupTypescriptOptions = {
                 include: [
                     "src/lib/**/*.ts",
                     componentDir + "/**/*.ts",
                 ],
-                verbosity: 10,
             }
 
             const input: InputOptions = {

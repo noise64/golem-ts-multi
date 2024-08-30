@@ -15,7 +15,8 @@
     "checkJs": false,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "noEmitOnError": true
   },
   "exclude": [
     "node_modules"
