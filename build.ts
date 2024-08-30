@@ -20,7 +20,7 @@ import {
 const commands: Commands = {
     "build": cmd(build, "build all components"),
     "updateRpcStubs": cmd(updateRpcStubs, "update stubs based on componentDependencies"),
-    "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template"),
+    "generateNewComponent": cmdArg(generateNewComponent, "generates new component from template"),
     "clean": cmd(clean, "clean outputs and generated code"),
 }
 
@@ -264,7 +264,7 @@ async function addStubDependency(compName: string, depCompName: string) {
     });
 }
 
-async function generateNewComponents(args: string[]) {
+async function generateNewComponent(args: string[]) {
     if (args.length != 1) {
         throw new Error(`generateNewComponents expected exactly one argument (component-name), got: [${args.join(", ")}]`);
     }
