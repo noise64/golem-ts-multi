@@ -34,6 +34,7 @@ world component-one  {
 
   // Project Component dependencies
   import golem:component-two-stub/stub-component-two;
+  import golem:component-three-stub/stub-component-three;
 
   export component-one-api;
 }

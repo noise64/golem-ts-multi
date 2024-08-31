@@ -33,7 +33,7 @@ world component-two {
   import wasi:sockets/instance-network@0.2.0;
 
   // Project Component dependencies
-  // import golem:name-stub/stub-name;
+  import golem:component-three-stub/stub-component-three;
 
   export component-two-api;
 }
