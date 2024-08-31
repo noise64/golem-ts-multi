@@ -30,8 +30,8 @@ export function runCapture(command: string, args: string[]): Promise<RunResult> 
     return new Promise((resolve, reject) => {
         const child = child_process.spawn(command, args);
 
-        let stderr: string;
-        let stdout: string;
+        let stderr: string = "";
+        let stdout: string = "";
 
         child.stdout.on('data', (data) => stdout += data);
         child.stderr.on('data', (data) => stderr += data);
