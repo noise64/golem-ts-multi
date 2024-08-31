@@ -77,6 +77,8 @@ The tests are in the [/test/integration.test.ts](/test/integration.test.ts) test
 npm run test
 ```
 
+Note that the `test` command is only available via `npm run`.
+
 The first test simply tests if our components metadata is available through `golem-cli component get`.
 
 The second test will:
