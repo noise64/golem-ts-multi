@@ -28,8 +28,8 @@ test("Calling add on component one calls other components", async (t) => {
     const componentURNs = await getComponentURNs();
     console.log(`Component URNs: ${componentURNs}`);
 
+    await addWorker("component-one", workerName, componentURNs);
     await addWorker("component-two", workerName, componentURNs);
-    await addWorker("component-three", workerName, componentURNs);
 
     // Check initial counter values
     assert.equal(await invokeWorkerGet("component-one", workerName), 0);
@@ -40,25 +40,25 @@ test("Calling add on component one calls other components", async (t) => {
     await invokeWorkerAdd("component-one", workerName, 2);
     assert.equal(await invokeWorkerGet("component-one", workerName), 2);
     assert.equal(await invokeWorkerGet("component-two", workerName), 2);
-    assert.equal(await invokeWorkerGet("component-three", workerName), 2);
+    assert.equal(await invokeWorkerGet("component-three", workerName), 4);
 
     // Call add on component-two and check counter values
     await invokeWorkerAdd("component-two", workerName, 3);
     assert.equal(await invokeWorkerGet("component-one", workerName), 2);
     assert.equal(await invokeWorkerGet("component-two", workerName), 5);
-    assert.equal(await invokeWorkerGet("component-three", workerName), 5);
+    assert.equal(await invokeWorkerGet("component-three", workerName), 7);
 
     // Call add on component-three and check counter values
-    await invokeWorkerAdd("component-two", workerName, 1);
+    await invokeWorkerAdd("component-three", workerName, 1);
     assert.equal(await invokeWorkerGet("component-one", workerName), 2);
     assert.equal(await invokeWorkerGet("component-two", workerName), 5);
-    assert.equal(await invokeWorkerGet("component-three", workerName), 6);
+    assert.equal(await invokeWorkerGet("component-three", workerName), 8);
 
-    // Call add on component-three and check counter values
-    await invokeWorkerAdd("component-two", workerName, 1);
+    // Call add on component-one and check counter values
+    await invokeWorkerAdd("component-one", workerName, 1);
     assert.equal(await invokeWorkerGet("component-one", workerName), 3);
     assert.equal(await invokeWorkerGet("component-two", workerName), 6);
-    assert.equal(await invokeWorkerGet("component-three", workerName), 7);
+    assert.equal(await invokeWorkerGet("component-three", workerName), 10);
 });
 
 async function getComponentMeta(compName: string) {
@@ -147,5 +147,5 @@ async function invokeWorkerGet(compName: string, workerName: string) {
 }
 
 async function invokeWorkerAdd(compName: string, workerName: string, value: number) {
-    const result = await invokeAndAwaitWorker(compName, workerName, `golem:${compName}/${compName}-api.{add}`, [value.toString()]);
+    await invokeAndAwaitWorker(compName, workerName, `golem:${compName}/${compName}-api.{add}`, [value.toString()]);
 }
