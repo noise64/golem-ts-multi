@@ -31,6 +31,7 @@ const libDir = path.join("src", "lib");
 const generatedDir = "generated";
 const componentTemplateDir = path.join("component-template", "component");
 
+// Defines worker to worker RPC dependencies
 const componentDependencies: Dependencies = {
     "component-one": ["component-two", "component-three"],
     "component-two": ["component-three"]
