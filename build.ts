@@ -22,7 +22,7 @@ const commands: Commands = {
     "updateRpcStubs": cmd(updateRpcStubs, "update stubs based on componentDependencies"),
     "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template"),
     "clean": cmd(clean, "clean outputs and generated code"),
-}
+};
 
 const pckNs = "golem";
 const outDir = "out";
@@ -32,8 +32,9 @@ const generatedDir = "generated";
 const componentTemplateDir = path.join("component-template", "component");
 
 const componentDependencies: Dependencies = {
-    "component-one": ["component-two"],
-}
+    "component-one": ["component-two", "component-three"],
+    "component-two": ["component-three"]
+};
 
 const compNames: string[] = fs
     .readdirSync(componentsDir, {withFileTypes: true})
