@@ -26,7 +26,7 @@ test("Calling add on component one calls other components", async (t) => {
     console.log(`Random worker name: ${workerName}`);
 
     const componentURNs = await getComponentURNs();
-    console.log(`Component URNs: ${componentURNs}`);
+    console.log("Component URNs:", componentURNs);
 
     await addWorker("component-one", workerName, componentURNs);
     await addWorker("component-two", workerName, componentURNs);
