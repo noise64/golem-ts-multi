@@ -6,16 +6,8 @@ import {InputOptions, OutputOptions, rollup} from "rollup";
 import rollupPluginNodeResolve from "@rollup/plugin-node-resolve";
 import rollupPluginTypeScript, {RollupTypescriptOptions} from "@rollup/plugin-typescript";
 
-import {
-    allDepsSorted,
-    cmd, cmdArg,
-    Commands,
-    Dependencies,
-    main,
-    run,
-    runCapture,
-    runTask
-} from "./src/build-tools/build-tools";
+import {allDepsSorted, cmd, cmdArg, Commands, Dependencies, main, runTask} from "./src/build-tools/build-tools";
+import {run, runCapture} from "./src/lib/process";
 
 const commands: Commands = {
     "build": cmd(build, "build all components"),
