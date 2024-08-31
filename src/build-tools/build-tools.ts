@@ -3,7 +3,7 @@ import path from "node:path";
 import child_process from "node:child_process";
 
 export class Command {
-    constructor(
+    private constructor(
         description: string,
         run: (() => Promise<void>) | undefined,
         runArgs: ((args: string[]) => Promise<void>) | undefined,
