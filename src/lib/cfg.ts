@@ -44,5 +44,5 @@ export function getComponentTwoWorkerURN(workerName: string): Uri {
 }
 
 export function getComponentThreeWorkerURN(workerName: string): Uri {
-    return {value: getComponentWorkerURN(mustGetEnv(envVarKeys.COMPONENT_TWO_ID), workerName)};
+    return {value: getComponentWorkerURN(mustGetEnv(envVarKeys.COMPONENT_THREE_ID), workerName)};
 }
