@@ -20,7 +20,7 @@ import {
 const commands: Commands = {
     "build": cmd(build, "build all components"),
     "updateRpcStubs": cmd(updateRpcStubs, "update stubs based on componentDependencies"),
-    "generateNewComponent": cmdArg(generateNewComponent, "generates new component from template"),
+    "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template"),
     "clean": cmd(clean, "clean outputs and generated code"),
 }
 
@@ -29,6 +29,7 @@ const outDir = "out";
 const componentsDir = path.join("src", "components");
 const libDir = path.join("src", "lib");
 const generatedDir = "generated";
+const componentTemplateDir = path.join("component-template", "component");
 
 const componentDependencies: Dependencies = {
     "component-one": ["component-two"],
@@ -77,6 +78,7 @@ async function rollupComponent(compName: string) {
     const mainTs = path.join(componentsDir, compName, "main.ts");
     const componentBuildDir = path.join(outDir, "build", compName);
     const mainJs = path.join(componentBuildDir, "main.js");
+    const generatedInterfacesDir = path.join(componentDir, generatedDir, "interfaces");
 
     return runTask({
         runMessage: `Rollup component: ${compName}`,
@@ -90,16 +92,34 @@ async function rollupComponent(compName: string) {
             "tsconfig.json",
         ],
         run: async () => {
+            const moduleRegex = /declare\s+module\s+"([^"]+)"/g;
+            const externalInterfaces: string[] = (() => {
+                if (!fs.existsSync(generatedInterfacesDir)) {
+                    return [];
+                }
+                return fs
+                    .readdirSync(generatedInterfacesDir, {recursive: true, withFileTypes: true})
+                    .filter(entry => !entry.isDirectory())
+                    .map(entry =>
+                        [...fs
+                            .readFileSync(path.join(entry.parentPath, entry.name)).toString()
+                            .matchAll(moduleRegex)
+                        ]
+                            .map(match => match[1])
+                    )
+                    .flat() as string[];
+            })();
+
             const tsOptions: RollupTypescriptOptions = {
                 include: [
                     "src/lib/**/*.ts",
                     componentDir + "/**/*.ts",
-                ],
+                ]
             }
 
             const input: InputOptions = {
                 input: mainTs,
-                external: ["golem:api/host@0.2.0"],
+                external: externalInterfaces,
                 plugins: [
                     rollupPluginNodeResolve(),
                     rollupPluginTypeScript(tsOptions),
@@ -264,23 +284,63 @@ async function addStubDependency(compName: string, depCompName: string) {
     });
 }
 
-async function generateNewComponent(args: string[]) {
+async function generateNewComponents(args: string[]) {
     if (args.length != 1) {
         throw new Error(`generateNewComponents expected exactly one argument (component-name), got: [${args.join(", ")}]`);
     }
 
-    const componentName = args[0];
-    if (componentName === undefined) {
+    const compName = args[0];
+    if (compName === undefined) {
         throw new Error("Undefined component name");
     }
 
-    const componentDir = path.join(componentsDir, componentName)
+    const componentDir = path.join(componentsDir, compName)
 
     if (fs.existsSync(componentDir)) {
         throw new Error(`${componentDir} already exists!`);
     }
 
+    console.log(`Creating directory ${componentDir}`);
     fs.mkdirSync(componentDir, {recursive: true});
+
+    const entries = fs.readdirSync(componentTemplateDir, {recursive: true, withFileTypes: true});
+
+    for (const entry of entries) {
+        const relEntryPath = path.relative(componentTemplateDir, entry.parentPath);
+        if (entry.isDirectory()) {
+            const targetPath = path.join(componentDir, relEntryPath, entry.name);
+            console.log(`Creating directory ${targetPath}`)
+            fs.mkdirSync(targetPath);
+
+            continue;
+        }
+
+        if (entry.name.endsWith(".template")) {
+            const sourcePath = path.join(entry.parentPath, entry.name);
+            const targetPath = path.join(componentDir, relEntryPath, entry.name.replaceAll(".template", ""));
+            console.log(`Generating ${targetPath} from ${sourcePath}`);
+
+            const dashToPascal = (str: string): string =>
+                str.split('-').map(s => s.substring(0, 1).toUpperCase() + s.substring(1)).join('');
+            const compNamePascal = dashToPascal(compName);
+            const compNameCamel = compNamePascal.substring(0, 1).toLowerCase() + compNamePascal.substring(1);
+
+            let template = fs.readFileSync(sourcePath).toString();
+            template = template.replaceAll("pck-ns", pckNs);
+            template = template.replaceAll("comp-name", compName);
+            template = template.replaceAll("compName", compNameCamel);
+            template = template.replaceAll("CompName", compNamePascal);
+
+            fs.writeFileSync(targetPath, new Uint8Array(Buffer.from(template)));
+
+            continue
+        }
+
+        const sourcePath = path.join(entry.parentPath, entry.name);
+        const targetPath = path.join(componentDir, relEntryPath, entry.name);
+        console.log(`Copying ${sourcePath} to ${targetPath}`);
+        fs.copyFileSync(sourcePath, targetPath);
+    }
 }
 
 async function clean() {

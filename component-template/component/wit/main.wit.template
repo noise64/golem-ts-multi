@@ -1,13 +1,13 @@
-package golem:component-two;
+package pck-ns:comp-name;
 
 // See https://component-model.bytecodealliance.org/design/wit.html for more details about the WIT syntax
 
-interface component-two-api {
+interface comp-name-api {
   add: func(value: u64);
   get: func() -> u64;
 }
 
-world component-two {
+world comp-name  {
   // Golem dependencies
   import golem:api/host@0.2.0;
   import golem:rpc/types@0.1.0;
@@ -33,7 +33,7 @@ world component-two {
   import wasi:sockets/instance-network@0.2.0;
 
   // Project Component dependencies
-  // import golem:name-stub/stub-name;
+  // import pck-ns:name-stub/stub-name;
 
-  export component-two-api;
+  export comp-name-api;
 }

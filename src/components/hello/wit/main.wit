@@ -1,13 +1,13 @@
-package golem:component-two;
+package golem:hello;
 
 // See https://component-model.bytecodealliance.org/design/wit.html for more details about the WIT syntax
 
-interface component-two-api {
+interface hello-api {
   add: func(value: u64);
   get: func() -> u64;
 }
 
-world component-two {
+world hello  {
   // Golem dependencies
   import golem:api/host@0.2.0;
   import golem:rpc/types@0.1.0;
@@ -35,5 +35,5 @@ world component-two {
   // Project Component dependencies
   // import golem:name-stub/stub-name;
 
-  export component-two-api;
+  export hello-api;
 }
