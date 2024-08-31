@@ -64,11 +64,26 @@ Then we can deploy our components with `golem-cli`, for which a wrapper command 
 npm run deploy
 ```
 
-Note, that `npm run deployComponent <component-name>` can be used to deploy (or update) only one component.
+Note that `npm run deployComponent <component-name>` can be used to deploy (or update) only one component.
 
 Once the components are deployed, a simple example integration test suite can be used to test the components.
 
-**TODO**
+Note that after deploy it might still take some time for the components to be prepared inside golem, which for TypeScript can take about 30-50 seconds, so invoking workers or running the tests immediately after deploy might have to wait for this preparation.
+
+Once the components are deployed, a simple example integration test suite can be used to test the components.
+The tests are in the [/test/integration.test.ts](/test/integration.test.ts) test file, and can be run with:
+
+```shell
+npm run test
+```
+
+The first test simply tests if our components metadata is available through `golem-cli component get`.
+
+The second test will:
+- get the _component URNs_ with `golem-cli component get`
+- generates a _random worker name_, so our tests are starting from a clean state
+- adds 1 - 1 worker for component one and component two with the required _environment variables_ containing the other workers' _component ids_
+- then makes various component invocations with `golem-cli worker invoke-and-await` and tests if the counters - after increments -  are holding the right value according to the delegated `add` function calls.
 
 ## Adding Components
 
