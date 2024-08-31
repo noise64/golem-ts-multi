@@ -20,7 +20,9 @@ import {
 const commands: Commands = {
     "build": cmd(build, "build all components"),
     "updateRpcStubs": cmd(updateRpcStubs, "update stubs based on componentDependencies"),
-    "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template"),
+    "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template, expects <component-name>"),
+    "deploy": cmd(deploy, "deploy (create or update) all components"),
+    "deployComponent": cmdArg(deployComponentCmd, "deploy (create or update) the specified component, expects <component-name>"),
     "clean": cmd(clean, "clean outputs and generated code"),
 };
 
@@ -287,15 +289,7 @@ async function addStubDependency(compName: string, depCompName: string) {
 }
 
 async function generateNewComponents(args: string[]) {
-    if (args.length != 1) {
-        throw new Error(`generateNewComponents expected exactly one argument (component-name), got: [${args.join(", ")}]`);
-    }
-
-    const compName = args[0];
-    if (compName === undefined) {
-        throw new Error("Undefined component name");
-    }
-
+    const compName = getCompNameFromArgs(args);
     const componentDir = path.join(componentsDir, compName)
 
     if (fs.existsSync(componentDir)) {
@@ -345,6 +339,31 @@ async function generateNewComponents(args: string[]) {
     }
 }
 
+async function deploy() {
+    for (const compName of compNames) {
+        await deployComponent(compName);
+    }
+}
+
+async function deployComponentCmd(args: string[]) {
+    return deployComponent(getCompNameFromArgs(args));
+}
+
+async function deployComponent(compName: string) {
+    console.log(`Deploying ${compName}`);
+    const componentsTargetDir = path.join(outDir, "components");
+    const wasm = path.join(componentsTargetDir, compName + ".wasm");
+    return run(
+        "golem-cli",
+        ["component", "add",
+            "--non-interactive",
+            "--component-name", compName,
+            wasm,
+        ]
+    );
+}
+
+
 async function clean() {
     let paths = ["out"];
     for (const compName of compNames) {
@@ -355,6 +374,19 @@ async function clean() {
         console.log(`Deleting ${path}`);
         fs.rmSync(path, {recursive: true, force: true});
     }
+}
+
+function getCompNameFromArgs(args: string[]) {
+    if (args.length != 1) {
+        throw new Error(`generateNewComponents expected exactly one argument (component-name), got: [${args.join(", ")}]`);
+    }
+
+    const compName = args[0];
+    if (compName === undefined) {
+        throw new Error("Undefined component name");
+    }
+
+    return compName;
 }
 
 await main(commands);

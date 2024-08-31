@@ -14,7 +14,9 @@ npm run help
 Available commands:
   build:                build all components
   updateRpcStubs:       update stubs based on componentDependencies
-  generateNewComponent: generates new component from template
+  generateNewComponent: generates new component from template, expects <component-name>
+  deploy:               deploy (create or update) all components
+  deployComponent:      deploy (create or update) the specified component, expects <component-name>
   clean:                clean outputs and generated code
 ```
 
@@ -37,6 +39,36 @@ npm run updateRpcStubs build
 ```
 
 The final components that are usable by golem are placed in the `out/components` folder.
+
+## Deploying and testing the example
+
+In the example 3 simple counter components are defined, which can be familiar from the smaller examples. To showcase the remote calls, the counters `add` functions are connected, apart from increasing their own counter:
+- **component one** delegates the add call to **component two** and **three** too,
+- and **component two** delegates to **component three**.
+
+In both cases the _current worker name_ will be used as _target worker name_ too.
+
+Apart from _worker name_, remote calls also require the **target components' deployed ID**. For this the example uses environment variables, and uses the `lib/cfg` subpackage (which is shared between the components) to extract it.
+
+The examples assume a configured default `golem-cli` profile, and will use that.
+
+To test, first we have to build the project as seen in the above:
+
+```shell
+npm run updateRpcStubs build
+```
+
+Then we can deploy our components with `golem-cli`, for which a wrapper command is provided:
+
+```shell
+npm run deploy
+```
+
+Note, that `npm run deployComponent <component-name>` can be used to deploy (or update) only one component.
+
+Once the components are deployed, a simple example integration test suite can be used to test the components.
+
+**TODO**
 
 ## Adding Components
 
