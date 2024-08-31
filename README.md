@@ -30,7 +30,7 @@ npm run build
 After this, using the `build` command is enough, unless there are changes in the RPC dependencies,
 in that case `updateRpcStubs` is needed again.
 
-Note that multiple commands can be used in one invocation (if the do not have parameters), e.g.: 
+Note that multiple commands can be used in one invocation (if they do not have parameters), e.g.: 
 
 ```shell
 npm run updateRpcStubs build
