@@ -126,7 +126,7 @@ async function invokeAndAwaitWorker(compName: string, workerName: string, functi
             "--component-name", compName,
             "--worker-name", workerName,
             "--function", functionName,
-            ...(functionArgs.map(arg => ["--arg", arg]).flat()),
+            ...(functionArgs.flatMap(arg => ["--arg", arg])),
         ],
     );
 
