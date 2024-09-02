@@ -1,6 +1,7 @@
 {
   "type": "module",
   "scripts": {
+    "fmt": "npx tsx build.ts fmt",
     "lint": "npx tsx build.ts lint",
     "fix": "npx tsx build.ts fix",
     "build": "npx tsx build.ts build",
@@ -24,8 +25,10 @@
     "@types/node": "^20.14.2",
     "@types/picomatch": "^3.0.1",
     "eslint": "^9.9.1",
+    "eslint-config-prettier": "^9.1.0",
     "globals": "^15.9.0",
     "picomatch": "^4.0.2",
+    "prettier": "3.3.3",
     "rollup": "^4.21.2",
     "tslib": "^2.7.0",
     "tsx": "^4.19.0",

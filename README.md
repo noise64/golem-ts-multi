@@ -1,6 +1,7 @@
 # Golem TypeScript Example with Multiple Components and Worker to Worker RPC Communication
 
 ## Building
+
 The project uses a custom Typescript build file: [build.ts](build.ts), ran through [tsx](https://nodejs.org/en/learn/getting-started/nodejs-with-typescript#running-typescript-code-with-tsx). The `build.ts` file handles **generating stubs**, **building**, **deploying** and **testing**; and also handles _"up to date" checks_ based on _modification times_. Build commands can be run using `npx tsx build.ts <command>` (or without _npx_, if _tsx_ is available globally), but all commands have `npm run <command>` wrappers, in the examples we will use the latter.
 
 To see the available commands use:
@@ -12,11 +13,15 @@ npm run help
 > npx tsx build.ts
 
 Available commands:
+  fmt:                  format using prettier
+  lint:                 lint project using eslint
+  fix:                  format, lint and fix project using eslint
   build:                build all components
   updateRpcStubs:       update stubs based on componentDependencies
   generateNewComponent: generates new component from template, expects <component-name>
   deploy:               deploy (create or update) all components
   deployComponent:      deploy (create or update) the specified component, expects <component-name>
+  test:                 run tests
   clean:                clean outputs and generated code
 ```
 
@@ -28,11 +33,10 @@ npm run updateRpcStubs
 npm run build
 ```
 
-
 After this, using the `build` command is enough, unless there are changes in the RPC dependencies,
 in that case `updateRpcStubs` is needed again.
 
-Note that multiple commands can be used in one invocation (if they do not have parameters), e.g.: 
+Note that multiple commands can be used in one invocation (if they do not have parameters), e.g.:
 
 ```shell
 npm run updateRpcStubs build
@@ -43,6 +47,7 @@ The final components that are usable by golem are placed in the `out/components`
 ## Deploying and testing the example
 
 In the example 3 simple counter components are defined, which can be familiar from the smaller examples. To showcase the remote calls, the counters `add` functions are connected, apart from increasing their own counter:
+
 - **component one** delegates the add call to **component two** and **three** too,
 - and **component two** delegates to **component three**.
 
@@ -77,15 +82,14 @@ The tests are in the [/test/integration.test.ts](/test/integration.test.ts) test
 npm run test
 ```
 
-Note that the `test` command is only available via `npm run`.
-
 The first test simply tests if our components metadata is available through `golem-cli component get`.
 
 The second test will:
+
 - get the _component URNs_ with `golem-cli component get`
 - generates a _random worker name_, so our tests are starting from a clean state
 - adds 1 - 1 worker for component one and component two with the required _environment variables_ containing the other workers' _component ids_
-- then makes various component invocations with `golem-cli worker invoke-and-await` and tests if the counters - after increments -  are holding the right value according to the delegated `add` function calls.
+- then makes various component invocations with `golem-cli worker invoke-and-await` and tests if the counters - after increments - are holding the right value according to the delegated `add` function calls.
 
 ## Adding Components
 
@@ -101,22 +105,23 @@ After adding a new component the `build` command will also include it.
 
 ## Using Worker to Worker RPC calls
 
-### Under the hood 
+### Under the hood
 
 Under the hood the `build.ts` commands below use generic `golem-cli stubgen` subcommands:
- - `golem-cli stubgen build` for creating remote call _stub WIT_ definitions and _WASM components_ for the stubs
- - `golem-cli stubgen add-stub-dependency` for adding the _stub WIT_ definitions to a _component's WIT_ dependencies
- - `golem-cli stubgen compose` for _composing_ components with the stub components
+
+- `golem-cli stubgen build` for creating remote call _stub WIT_ definitions and _WASM components_ for the stubs
+- `golem-cli stubgen add-stub-dependency` for adding the _stub WIT_ definitions to a _component's WIT_ dependencies
+- `golem-cli stubgen compose` for _composing_ components with the stub components
 
 ### Commands and required manual steps
 
-The dependencies between components are defined in  the [build.ts](build.ts) build script:
+The dependencies between components are defined in the [build.ts](build.ts) build script:
 
 ```typescript
 // Defines worker to worker RPC dependencies
 const componentDependencies: Dependencies = {
-    "component-one": ["component-two", "component-three"],
-    "component-two": ["component-three"]
+  "component-one": ["component-two", "component-three"],
+  "component-two": ["component-three"],
 };
 ```
 
@@ -126,11 +131,11 @@ After changing dependencies the `updateRpcStubs` command can be used to create t
 npm run updateRpcStubs
 ```
 
-The command will create stubs for the dependency projects in the ``/out/stub`` directory and will also place the required stub _WIT_ interfaces on the dependant component's `wit/deps` directory.
+The command will create stubs for the dependency projects in the `/out/stub` directory and will also place the required stub _WIT_ interfaces on the dependant component's `wit/deps` directory.
 
 To actually use the dependencies in a project it also has to be manually imported in the component's world.
 
-E.g. with the above definitions the following import has to be __manually__ added to `/components/component-one/wit/component-one.wit`:
+E.g. with the above definitions the following import has to be **manually** added to `/components/component-one/wit/component-one.wit`:
 
 ```wit
 import pack-ns:component-two-stub;
