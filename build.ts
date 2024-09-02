@@ -6,15 +6,28 @@ import {InputOptions, OutputOptions, rollup} from "rollup";
 import rollupPluginNodeResolve from "@rollup/plugin-node-resolve";
 import rollupPluginTypeScript, {RollupTypescriptOptions} from "@rollup/plugin-typescript";
 
-import {allDepsSorted, cmd, cmdArg, Commands, Dependencies, main, runTask} from "./src/build-tools/build-tools";
+import {
+    allDepsSorted,
+    cmd,
+    cmdArg,
+    Commands,
+    Dependencies,
+    fsMatch,
+    main,
+    runTask
+} from "./src/build-tools/build-tools";
 import {run, runCapture} from "./src/lib/process";
+import picomatch from "picomatch";
 
 const commands: Commands = {
+    "lint": cmd(() => eslint(false), "lint project using eslint"),
+    "fix": cmd(() => eslint(true), "lint and fix project using eslint"),
     "build": cmd(build, "build all components"),
     "updateRpcStubs": cmd(updateRpcStubs, "update stubs based on componentDependencies"),
     "generateNewComponent": cmdArg(generateNewComponents, "generates new component from template, expects <component-name>"),
     "deploy": cmd(deploy, "deploy (create or update) all components"),
     "deployComponent": cmdArg(deployComponentCmd, "deploy (create or update) the specified component, expects <component-name>"),
+    "test": cmd(test, "run tests"),
     "clean": cmd(clean, "clean outputs and generated code"),
 };
 
@@ -68,6 +81,11 @@ async function generateBinding(compName: string) {
     });
 }
 
+async function eslint(fix: boolean) {
+    const args = ["eslint", "--color"];
+    if (fix) args.push("--fix");
+    return run("npx", args);
+}
 
 async function rollupComponent(compName: string) {
     const componentDir = path.join(componentsDir, compName);
@@ -89,27 +107,17 @@ async function rollupComponent(compName: string) {
         ],
         run: async () => {
             const moduleRegex = /declare\s+module\s+"([^"]+)"/g;
-            const externalInterfaces: string[] = (() => {
-                if (!fs.existsSync(generatedInterfacesDir)) {
-                    return [];
-                }
-                return fs
-                    .readdirSync(generatedInterfacesDir, {recursive: true, withFileTypes: true})
-                    .filter(entry => !entry.isDirectory())
-                    .flatMap(entry =>
-                        [...fs
-                            .readFileSync(path.join(entry.parentPath, entry.name)).toString()
-                            .matchAll(moduleRegex)
-                        ]
-                            .map(match => {
-                                const moduleName = match[1];
-                                if (moduleName === undefined) {
-                                    throw new Error(`Missing match for module name`);
-                                }
-                                return moduleName;
-                            })
+            const externalInterfaces: string[] =
+                fsMatch({includePaths: [generatedInterfacesDir], picoPattern: "**/*.d.ts"})
+                    .flatMap(path =>
+                        [...fs.readFileSync(path).toString().matchAll(moduleRegex)].map(match => {
+                            const moduleName = match[1];
+                            if (moduleName === undefined) {
+                                throw new Error(`Missing match for module name`);
+                            }
+                            return moduleName;
+                        })
                     );
-            })();
 
             const tsOptions: RollupTypescriptOptions = {
                 include: [
@@ -163,7 +171,7 @@ async function stubCompose(compName: string) {
     const componentsBuildDir = path.join(outDir, "components");
     const targetWasm = path.join(outDir, "components", compName + ".wasm");
 
-    let stubWasms: string[] = [];
+    const stubWasms: string[] = [];
     const deps = componentDependencies[compName];
     if (deps !== undefined) {
         for (const compName of deps) {
@@ -360,9 +368,18 @@ async function deployComponent(compName: string) {
     );
 }
 
+async function test() {
+    {
+        const matcher = picomatch("test/**.test.ts");
+        console.log("matcher test", matcher("test"));
+        console.log("matcher test base", matcher("test"));
+    }
+
+    return run("npx", ["tsx", ...fsMatch({includePaths: ["test"], picoPattern: "test/**.test.ts"})]);
+}
 
 async function clean() {
-    let paths = ["out"];
+    const paths = ["out"];
     for (const compName of compNames) {
         paths.push(path.join(componentsDir, compName, generatedDir))
     }

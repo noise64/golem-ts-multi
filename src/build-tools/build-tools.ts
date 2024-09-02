@@ -1,5 +1,6 @@
-import fs from "node:fs";
+import fs, {Dirent} from "node:fs";
 import path from "node:path";
+import picomatch from "picomatch";
 
 export class Command {
     private constructor(
@@ -139,4 +140,28 @@ export function allDepsSorted(dependencies: Dependencies): string[] {
         }
     }
     return Array.from(allDepsSet).sort();
+}
+
+interface FsMatchOptions {
+    includePaths?: string[],
+    picoPattern?: string;
+    direntFilter?: (dirent: Dirent) => boolean;
+}
+
+export function fsMatch(options: FsMatchOptions): string[] {
+    const includePaths = options.includePaths ?? ["."];
+    return includePaths
+        .flatMap(includePath => {
+            if (!fs.existsSync(includePath)) return [];
+            const picoMatcher = options.picoPattern !== undefined ? picomatch(options.picoPattern) : undefined;
+            return fs
+                .readdirSync(includePath, {withFileTypes: true, recursive: true})
+                .map((entry): [Dirent, string] => [entry, path.join(entry.parentPath, entry.name)])
+                .filter(([dirent, path]) => {
+                    if (options.direntFilter !== undefined && !options.direntFilter(dirent)) return false;
+                    if (picoMatcher !== undefined && !picoMatcher(path)) return false;
+                    return true;
+                })
+                .map(([, path]) => path)
+        });
 }
