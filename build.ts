@@ -17,7 +17,6 @@ import {
   runTask,
 } from "./src/build-tools/build-tools";
 import { run, runCapture } from "./src/lib/process";
-import picomatch from "picomatch";
 
 const commands: Commands = {
   fmt: cmd(prettierWrite, "format using prettier"),
