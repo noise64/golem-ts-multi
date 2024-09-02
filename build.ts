@@ -96,14 +96,19 @@ async function rollupComponent(compName: string) {
                 return fs
                     .readdirSync(generatedInterfacesDir, {recursive: true, withFileTypes: true})
                     .filter(entry => !entry.isDirectory())
-                    .map(entry =>
+                    .flatMap(entry =>
                         [...fs
                             .readFileSync(path.join(entry.parentPath, entry.name)).toString()
                             .matchAll(moduleRegex)
                         ]
-                            .map(match => match[1])
-                    )
-                    .flat() as string[];
+                            .map(match => {
+                                const moduleName = match[1];
+                                if (moduleName === undefined) {
+                                    throw new Error(`Missing match for module name`);
+                                }
+                                return moduleName;
+                            })
+                    );
             })();
 
             const tsOptions: RollupTypescriptOptions = {
