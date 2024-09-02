@@ -375,12 +375,6 @@ async function deployComponent(compName: string) {
 }
 
 async function test() {
-  {
-    const matcher = picomatch("test/**.test.ts");
-    console.log("matcher test", matcher("test"));
-    console.log("matcher test base", matcher("test"));
-  }
-
   return run("npx", ["tsx", ...fsMatch({ includePaths: ["test"], picoPattern: "test/**.test.ts" })]);
 }
 
