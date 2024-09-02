@@ -3,7 +3,7 @@ import * as assert from "node:assert";
 import {run, runCapture} from "../src/lib/process";
 import {randomUUID} from "node:crypto";
 
-test("Project is deployed", async (t) => {
+test("Project is deployed", async () => {
     const componentOneMeta = await getComponentMeta("component-one");
     console.log(componentOneMeta);
     assert.ok(componentOneMeta);
@@ -20,7 +20,7 @@ test("Project is deployed", async (t) => {
     assert.ok(componentThreeMeta["componentUrn"]);
 });
 
-test("Calling add on component one calls other components", async (t) => {
+test("Calling add on component one calls other components", async () => {
     // Setup
     const workerName = randomUUID();
     console.log(`Random worker name: ${workerName}`);
