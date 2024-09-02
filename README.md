@@ -15,7 +15,7 @@ npm run help
 Available commands:
   fmt:                  format using prettier
   lint:                 lint project using eslint
-  fix:                  format, lint and fix project using eslint
+  fix:                  format, lint and fix project using prettier and eslint
   build:                build all components
   updateRpcStubs:       update stubs based on componentDependencies
   generateNewComponent: generates new component from template, expects <component-name>

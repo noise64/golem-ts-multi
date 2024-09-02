@@ -22,7 +22,7 @@ import picomatch from "picomatch";
 const commands: Commands = {
   fmt: cmd(prettierWrite, "format using prettier"),
   lint: cmd(() => eslint(false), "lint project using eslint"),
-  fix: cmd(fix, "format, lint and fix project using eslint"),
+  fix: cmd(fix, "format, lint and fix project using prettier and eslint"),
   build: cmd(build, "build all components"),
   updateRpcStubs: cmd(updateRpcStubs, "update stubs based on componentDependencies"),
   generateNewComponent: cmdArg(
