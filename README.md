@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This example now lives at [golem-examples](https://github.com/golemcloud/golem-examples/tree/main/examples/ts/ts-multi-rpc) as a template.
+
 # Golem TypeScript Example with Multiple Components and Worker to Worker RPC Communication
 
 ## Building
